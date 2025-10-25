@@ -1,0 +1,15 @@
+#Data Manipulation
+pandas
+#Scraping
+requests
+bs4
+selenium
+#Time
+datetime
+#Maths
+numpy
+scipy.stats
+
+#APP FRONT-END
+flask
+plotly.express
