@@ -114,10 +114,6 @@ fig = px.bar(
 )
 st.plotly_chart(fig)
 
-# Optional: Show raw data
-with st.expander("Show raw data"):
-    st.dataframe(filtered_df)
-
 import pandas as pd
 import streamlit as st
 
@@ -147,6 +143,7 @@ st.caption(f"📅 Last refreshed: {now_uk:%Y-%m-%d %H:%M:%S %Z}")
 st.dataframe(df)
 
 # In[ ]:
+
 
 
 
