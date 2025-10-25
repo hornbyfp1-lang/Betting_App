@@ -47,7 +47,7 @@ url = "https://github.com/hornbyfp1-lang/Betting_App/blob/main/result_prediction
 df = pd.read_csv(
     url,
     index_col=0,# because of the leading comma
-    parse_dates = "Date of match",
+    parse_dates = ["Date of match"],
     dayfirst=True,                              # 01-11-25 = 1 Nov 2025
     encoding="utf-8-sig"                        # robust to BOM
 )
@@ -95,6 +95,7 @@ with st.expander("Show raw data"):
 
 
 # In[ ]:
+
 
 
 
