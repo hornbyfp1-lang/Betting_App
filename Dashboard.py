@@ -136,10 +136,18 @@ if st.button("🔄 Refresh Data"):
 
 df = load_data()
 
-st.caption(f"📅 Last refreshed: {pd.Timestamp.now():%Y-%m-%d %H:%M:%S}")
+from datetime import datetime
+import pytz
+
+uk_tz = pytz.timezone("Europe/London")
+now_uk = datetime.now(uk_tz)
+
+st.caption(f"📅 Last refreshed: {now_uk:%Y-%m-%d %H:%M:%S %Z}")
+
 st.dataframe(df)
 
 # In[ ]:
+
 
 
 
