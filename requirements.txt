@@ -1,15 +1,9 @@
-#Data Manipulation
-pandas
-#Scraping
-requests
-beautifulsoup4
-selenium
-#Time
-datetime
-#Maths
-numpy
-scipy.stats
-
-#APP FRONT-END
-flask
-plotly.express
+streamlit>=1.50
+pandas>=2.3
+numpy>=2.3
+requests>=2.32
+beautifulsoup4>=4.12
+lxml>=5.3           # optional but recommended for fast/robust HTML parsing
+selenium>=4.18      # only if you truly need it
+webdriver-manager>=4.0  # only if you use selenium
+scipy>=1.14
