@@ -118,8 +118,29 @@ st.plotly_chart(fig)
 with st.expander("Show raw data"):
     st.dataframe(filtered_df)
 
+import pandas as pd
+import streamlit as st
+
+@st.cache_data(ttl=300)  # cache for 5 minutes (or whatever you like)
+def load_data():
+    url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/result_prediction.csv"
+    df = pd.read_csv(url, encoding="utf-8-sig")
+    df.columns = df.columns.str.strip().str.replace("\ufeff", "")
+    df["Date of match"] = pd.to_datetime(df["Date of match"], dayfirst=True, errors="coerce")
+    df["Run date"] = pd.to_datetime(df["Run date"], errors="coerce")
+    return df
+
+# 👇 Manual refresh button
+if st.button("🔄 Refresh Data"):
+    st.cache_data.clear()
+
+df = load_data()
+
+st.caption(f"📅 Last refreshed: {pd.Timestamp.now():%Y-%m-%d %H:%M:%S}")
+st.dataframe(df)
 
 # In[ ]:
+
 
 
 
