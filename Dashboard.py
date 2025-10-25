@@ -40,7 +40,8 @@ import plotly.express as px
 st.title("Football Predictions Dashboard")
 
 # Load data
-df = pd.read_csv(r"C:\Users\hornb\OneDrive\Desktop\Betting App\result_prediction.csv", index_col=0)
+url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/data/result_prediction.csv"
+df = pd.read_csv(url, index_col=0)
 
 # Sidebar filter
 fixture_selection = st.sidebar.selectbox("Select fixture", df["Fixture"].unique())
@@ -80,6 +81,7 @@ with st.expander("Show raw data"):
 
 
 # In[ ]:
+
 
 
 
