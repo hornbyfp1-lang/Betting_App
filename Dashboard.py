@@ -42,7 +42,7 @@ st.title("Football Predictions Dashboard")
 # Load data
 import pandas as pd
 
-url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/data/result_prediction.csv"
+url = "https://github.com/hornbyfp1-lang/Betting_App/blob/main/result_prediction.csv"
 
 df = pd.read_csv(
     url,
@@ -95,6 +95,7 @@ with st.expander("Show raw data"):
 
 
 # In[ ]:
+
 
 
 
