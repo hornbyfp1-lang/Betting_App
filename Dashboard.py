@@ -110,11 +110,11 @@ else:
     # Show the data table (displaying formatted date columns)
     display_cols = [
         "Fixture",
-        "Date of match (display)",
+        "Date of match",
         "Home Win Probability - Prediction", "Draw Probability - Prediction", "Away Win Probability - Prediction",
         "Home Win - Market Implied Probability", "Draw - Market Implied Probability", "Away Win - Market Implied Probability",
         "Home Win - Best Bookmaker Odds", "Draw - Best Bookmaker Odds", "Away Win- Best Bookmaker Odds",
-        "Run date (display)",
+        "Run date",
     ]
     st.dataframe(filtered[display_cols], use_container_width=True, hide_index=True)
 
