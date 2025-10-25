@@ -46,8 +46,6 @@ url = "https://github.com/hornbyfp1-lang/Betting_App/blob/main/result_prediction
 
 import pandas as pd
 
-url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/result_prediction.csv"
-
 df = pd.read_csv(url, index_col=0, encoding="utf-8-sig")
 
 # normalize headers in case of stray spaces/BOM
@@ -95,6 +93,7 @@ with st.expander("Show raw data"):
 
 
 # In[ ]:
+
 
 
 
