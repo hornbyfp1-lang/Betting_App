@@ -42,18 +42,45 @@ st.title("Football Predictions Dashboard")
 # Load data
 import pandas as pd
 
-url = "https://github.com/hornbyfp1-lang/Betting_App/blob/main/result_prediction.csv"
+url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/result_prediction.csv"
 
-import pandas as pd
+must_have = [
+    "Fixture","Date of match",
+    "Home Win Probability - Prediction","Draw Probability - Prediction","Away Win Probability - Prediction",
+    "Home Win - Market Implied Probability","Draw - Market Implied Probability","Away Win - Market Implied Probability",
+    "Home Win - Best Bookmaker Odds","Draw - Best Bookmaker Odds","Away Win- Best Bookmaker Odds","Run date"
+]
 
-df = pd.read_csv(url, index_col=0, encoding="utf-8-sig")
+# Load
+df = pd.read_csv(
+    url,
+    sep=",",
+    encoding="utf-8-sig",
+    on_bad_lines="skip"  # skips any truncated/garbage lines
+)
 
-# normalize headers in case of stray spaces/BOM
-df.columns = df.columns.str.strip()
+# Column hygiene
+df.columns = df.columns.str.strip().str.replace("\ufeff", "", regex=False)
 
-# parse the date column explicitly
-df["Date of match"] = pd.to_datetime(df["Date of match"], dayfirst=True, errors="raise")
+# Ensure required columns exist
+missing = [c for c in must_have if c not in df.columns]
+if missing:
+    raise ValueError(f"Missing columns: {missing}. Check the CSV header / delimiters.")
 
+# Parse dates
+df["Date of match"] = pd.to_datetime(df["Date of match"], dayfirst=True, errors="coerce")
+df["Run date"] = pd.to_datetime(df["Run date"], errors="coerce")
+
+# Coerce numeric probability columns
+prob_cols = [
+    "Home Win Probability - Prediction","Draw Probability - Prediction","Away Win Probability - Prediction",
+    "Home Win - Market Implied Probability","Draw - Market Implied Probability","Away Win - Market Implied Probability",
+]
+df[prob_cols] = df[prob_cols].apply(pd.to_numeric, errors="coerce")
+
+# Quick sanity checks
+assert df["Fixture"].notna().all(), "Some rows have missing Fixture."
+assert df["Date of match"].notna().any(), "No dates parsed — check date format (should be DD-MM-YY)."
 
 # Sidebar filter
 fixture_selection = st.sidebar.selectbox("Select fixture", df["Fixture"].unique())
@@ -93,6 +120,7 @@ with st.expander("Show raw data"):
 
 
 # In[ ]:
+
 
 
 
