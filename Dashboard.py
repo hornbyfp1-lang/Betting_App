@@ -1,168 +1,100 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[16]:
-
-
-#Data Manipulation
+# ===== Imports =====
 import pandas as pd
-from pandas import json_normalize
-#Scraping
-import requests
-from bs4 import BeautifulSoup as bs
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-#Time
-import datetime
-from datetime import date
-from dateutil.relativedelta import relativedelta
-from pandas.tseries.offsets import BDay
-#Maths
 import numpy as np
-from scipy.stats import poisson
-
-import re
-
-#APP FRONT-END
 import streamlit as st
-
 import plotly.express as px
+from datetime import datetime
+from zoneinfo import ZoneInfo  # stdlib; no pytz needed
 
-
-# In[24]:
-
-
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-
+st.set_page_config(page_title="Football Predictions Dashboard", layout="wide")
 st.title("Football Predictions Dashboard")
 
-# Load data
-import pandas as pd
+RAW_URL = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/result_prediction.csv"
 
-url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/result_prediction.csv"
-
-must_have = [
-    "Fixture","Date of match",
-    "Home Win Probability - Prediction","Draw Probability - Prediction","Away Win Probability - Prediction",
-    "Home Win - Market Implied Probability","Draw - Market Implied Probability","Away Win - Market Implied Probability",
-    "Home Win - Best Bookmaker Odds","Draw - Best Bookmaker Odds","Away Win- Best Bookmaker Odds","Run date"
+REQUIRED_COLS = [
+    "Fixture", "Date of match",
+    "Home Win Probability - Prediction", "Draw Probability - Prediction", "Away Win Probability - Prediction",
+    "Home Win - Market Implied Probability", "Draw - Market Implied Probability", "Away Win - Market Implied Probability",
+    "Home Win - Best Bookmaker Odds", "Draw - Best Bookmaker Odds", "Away Win- Best Bookmaker Odds",
+    "Run date",
 ]
 
-# Load
-df = pd.read_csv(
-    url,
-    sep=",",
-    encoding="utf-8-sig",
-    on_bad_lines="skip"  # skips any truncated/garbage lines
-)
+# ===== Data Loading (cached) =====
+@st.cache_data(ttl=300)   # cache for 5 minutes
+def load_data() -> pd.DataFrame:
+    df = pd.read_csv(RAW_URL, sep=",", encoding="utf-8-sig", on_bad_lines="skip")
+    # clean headers
+    df.columns = df.columns.str.strip().str.replace("\ufeff", "", regex=False)
 
-# Column hygiene
-df.columns = df.columns.str.strip().str.replace("\ufeff", "", regex=False)
+    missing = [c for c in REQUIRED_COLS if c not in df.columns]
+    if missing:
+        raise ValueError(f"Missing columns: {missing}")
 
-# Ensure required columns exist
-missing = [c for c in must_have if c not in df.columns]
-if missing:
-    raise ValueError(f"Missing columns: {missing}. Check the CSV header / delimiters.")
-
-# Parse dates
-df["Date of match"] = pd.to_datetime(df["Date of match"], dayfirst=True, errors="coerce")
-df["Run date"] = pd.to_datetime(df["Run date"], errors="coerce")
-
-# Format as strings just for display
-df["Date of match"] = df["Date of match"].dt.strftime("%d-%m-%Y")
-df["Run date"] = df["Run date"].dt.strftime("%d-%m-%Y")
-
-# Coerce numeric probability columns
-prob_cols = [
-    "Home Win Probability - Prediction","Draw Probability - Prediction","Away Win Probability - Prediction",
-    "Home Win - Market Implied Probability","Draw - Market Implied Probability","Away Win - Market Implied Probability",
-]
-df[prob_cols] = df[prob_cols].apply(pd.to_numeric, errors="coerce")
-
-# Quick sanity checks
-assert df["Fixture"].notna().all(), "Some rows have missing Fixture."
-assert df["Date of match"].notna().any(), "No dates parsed — check date format (should be DD-MM-YY)."
-
-# Sidebar filter
-fixture_selection = st.sidebar.selectbox("Select fixture", df["Fixture"].unique())
-
-# Filter data
-filtered_df = df[df["Fixture"] == fixture_selection]
-
-# Prepare data for plotting
-plot_df = pd.DataFrame({
-    "Outcome": ["Home Win", "Draw", "Away Win"] * 2,
-    "Probability": [
-        filtered_df["Home Win Probability - Prediction"].values[0],
-        filtered_df["Draw Probability - Prediction"].values[0],
-        filtered_df["Away Win Probability - Prediction"].values[0],
-        filtered_df["Home Win - Market Implied Probability"].values[0],
-        filtered_df["Draw - Market Implied Probability"].values[0],
-        filtered_df["Away Win - Market Implied Probability"].values[0],
-    ],
-    "Source": ["Prediction"] * 3 + ["Market"] * 3
-})
-
-# Plot
-fig = px.bar(
-    plot_df,
-    x="Outcome",
-    y="Probability",
-    color="Source",
-    barmode="group",
-    title=f"Predicted vs Market Probabilities for {fixture_selection}",
-    text_auto=True
-)
-st.plotly_chart(fig)
-
-import pandas as pd
-import streamlit as st
-
-@st.cache_data(ttl=300)  # cache for 5 minutes (or whatever you like)
-def load_data():
-    url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/result_prediction.csv"
-    df = pd.read_csv(url, encoding="utf-8-sig")
-    df.columns = df.columns.str.strip().str.replace("\ufeff", "")
+    # parse dates (keep as datetime for sorting/filtering)
     df["Date of match"] = pd.to_datetime(df["Date of match"], dayfirst=True, errors="coerce")
     df["Run date"] = pd.to_datetime(df["Run date"], errors="coerce")
+
+    # coerce numeric probabilities
+    prob_cols = [
+        "Home Win Probability - Prediction", "Draw Probability - Prediction", "Away Win Probability - Prediction",
+        "Home Win - Market Implied Probability", "Draw - Market Implied Probability", "Away Win - Market Implied Probability",
+    ]
+    df[prob_cols] = df[prob_cols].apply(pd.to_numeric, errors="coerce")
     return df
 
-# 👇 Manual refresh button
-if st.button("🔄 Refresh Data"):
-    st.cache_data.clear()
+# ===== Manual refresh =====
+col_btn, col_time = st.columns([1, 3], vertical_alignment="center")
+with col_btn:
+    if st.button("🔄 Refresh Data", use_container_width=True):
+        st.cache_data.clear()
+        st.experimental_rerun()
+
+with col_time:
+    now_uk = datetime.now(ZoneInfo("Europe/London"))
+    st.caption(f"📅 Last refreshed: {now_uk:%Y-%m-%d %H:%M:%S %Z}")
 
 df = load_data()
 
-from datetime import datetime
-import pytz
+# ===== Sidebar Filters =====
+fixture = st.sidebar.selectbox("Select fixture", df["Fixture"].dropna().unique())
 
-uk_tz = pytz.timezone("Europe/London")
-now_uk = datetime.now(uk_tz)
+# ===== Subset for chart =====
+row = df.loc[df["Fixture"] == fixture].head(1)
+if row.empty:
+    st.warning("No data for the selected fixture.")
+    st.stop()
 
-st.caption(f"📅 Last refreshed: {now_uk:%Y-%m-%d %H:%M:%S %Z}")
+plot_df = pd.DataFrame({
+    "Outcome": ["Home Win", "Draw", "Away Win"] * 2,
+    "Probability": [
+        float(row["Home Win Probability - Prediction"].iloc[0]),
+        float(row["Draw Probability - Prediction"].iloc[0]),
+        float(row["Away Win Probability - Prediction"].iloc[0]),
+        float(row["Home Win - Market Implied Probability"].iloc[0]),
+        float(row["Draw - Market Implied Probability"].iloc[0]),
+        float(row["Away Win - Market Implied Probability"].iloc[0]),
+    ],
+    "Source": ["Prediction"] * 3 + ["Market"] * 3,
+})
 
-st.dataframe(df)
+fig = px.bar(
+    plot_df, x="Outcome", y="Probability", color="Source",
+    barmode="group", text_auto=".2%",
+    title=f"Predicted vs Market Probabilities — {fixture}",
+)
+fig.update_yaxes(tickformat=".0%")
+st.plotly_chart(fig, use_container_width=True)
 
-# In[ ]:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# ===== Table (pretty dates) =====
+st.subheader("All fixtures")
+st.dataframe(
+    df.sort_values(["Date of match", "Fixture"]).reset_index(drop=True),
+    use_container_width=True,
+    column_config={
+        "Date of match": st.column_config.DateColumn("Date of match", format="DD-MM-YYYY"),
+        "Run date": st.column_config.DatetimeColumn("Run date", format="DD-MM-YYYY HH:mm"),
+    },
+)
