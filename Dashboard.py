@@ -68,8 +68,8 @@ def load_data(cache_buster: int) -> pd.DataFrame:
     df[NUMERIC_PROB_COLS] = df[NUMERIC_PROB_COLS].apply(pd.to_numeric, errors="coerce")
 
     # Display-friendly date strings (DD-MM-YYYY)
-    df["Date of match (display)"] = df["Date of match"].dt.strftime("%d-%m-%Y")
-    df["Run date (display)"] = df["Run date"].dt.strftime("%d-%m-%Y")
+    df["Date of match"] = df["Date of match"].dt.strftime("%d-%m-%Y")
+    df["Run date"] = df["Run date"].dt.strftime("%d-%m-%Y")
 
     return df
 
@@ -145,3 +145,4 @@ else:
     fig.update_yaxes(range=[0, 1], tickformat=".0%")
     fig.update_layout(legend_title_text="", yaxis_title="Probability", xaxis_title="")
     st.plotly_chart(fig, use_container_width=True)
+
