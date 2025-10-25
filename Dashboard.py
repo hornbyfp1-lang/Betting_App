@@ -44,17 +44,17 @@ import pandas as pd
 
 url = "https://github.com/hornbyfp1-lang/Betting_App/blob/main/result_prediction.csv"
 
-df = pd.read_csv(
-    url,
-    index_col=0,# because of the leading comma
-    parse_dates = ["Date of match"],
-    dayfirst=True,                              # 01-11-25 = 1 Nov 2025
-    encoding="utf-8-sig"                        # robust to BOM
-)
+import pandas as pd
 
-# (Optional) make column names friendlier
-df.columns = [c.strip().replace(" - ", "_").replace(" ", "_") for c in df.columns]
-# Example: "Home Win Probability - Prediction" -> "Home_Win_Probability_Prediction"
+url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/result_prediction.csv"
+
+df = pd.read_csv(url, index_col=0, encoding="utf-8-sig")
+
+# normalize headers in case of stray spaces/BOM
+df.columns = df.columns.str.strip()
+
+# parse the date column explicitly
+df["Date of match"] = pd.to_datetime(df["Date of match"], dayfirst=True, errors="raise")
 
 
 # Sidebar filter
@@ -95,6 +95,7 @@ with st.expander("Show raw data"):
 
 
 # In[ ]:
+
 
 
 
