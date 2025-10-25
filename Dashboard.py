@@ -40,8 +40,22 @@ import plotly.express as px
 st.title("Football Predictions Dashboard")
 
 # Load data
-url = "https://github.com/hornbyfp1-lang/Betting_App/blob/main/result_prediction.csv"
-df = pd.read_csv(url, index_col=0)
+import pandas as pd
+
+url = "https://raw.githubusercontent.com/hornbyfp1-lang/Betting_App/main/data/result_prediction.csv"
+
+df = pd.read_csv(
+    url,
+    index_col=0,                                # because of the leading comma
+    parse_dates=["Date of match"],
+    dayfirst=True,                              # 01-11-25 = 1 Nov 2025
+    encoding="utf-8-sig"                        # robust to BOM
+)
+
+# (Optional) make column names friendlier
+df.columns = [c.strip().replace(" - ", "_").replace(" ", "_") for c in df.columns]
+# Example: "Home Win Probability - Prediction" -> "Home_Win_Probability_Prediction"
+
 
 # Sidebar filter
 fixture_selection = st.sidebar.selectbox("Select fixture", df["Fixture"].unique())
@@ -81,6 +95,7 @@ with st.expander("Show raw data"):
 
 
 # In[ ]:
+
 
 
 
