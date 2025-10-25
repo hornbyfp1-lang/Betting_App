@@ -71,6 +71,10 @@ if missing:
 df["Date of match"] = pd.to_datetime(df["Date of match"], dayfirst=True, errors="coerce")
 df["Run date"] = pd.to_datetime(df["Run date"], errors="coerce")
 
+# Format as strings just for display
+df["Date of match"] = df["Date of match"].dt.strftime("%d-%m-%Y")
+df["Run date"] = df["Run date"].dt.strftime("%d-%m-%Y")
+
 # Coerce numeric probability columns
 prob_cols = [
     "Home Win Probability - Prediction","Draw Probability - Prediction","Away Win Probability - Prediction",
@@ -143,6 +147,7 @@ st.caption(f"📅 Last refreshed: {now_uk:%Y-%m-%d %H:%M:%S %Z}")
 st.dataframe(df)
 
 # In[ ]:
+
 
 
 
