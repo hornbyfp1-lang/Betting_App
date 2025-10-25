@@ -2,7 +2,7 @@
 pandas
 #Scraping
 requests
-bs4
+beautifulsoup4
 selenium
 #Time
 datetime
