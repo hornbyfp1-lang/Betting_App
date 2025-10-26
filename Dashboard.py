@@ -34,21 +34,17 @@ NUMERIC_PROB_COLS = [
 # ---- Data loader (cached) ----
 @st.cache_data(ttl=300)  # keep for 5 minutes
 def load_data(cache_buster: int) -> pd.DataFrame:
-    """
-    Load and sanitize the CSV from GitHub.
-    cache_buster is used to make the cache key change over time and bust any upstream CDN cache.
-    """
-    # add a query param so raw.githubusercontent.com/CDN is less likely to hand us an old copy
+    """Load and sanitize the CSV from GitHub."""
     url = f"{RAW_URL}?nocache={cache_buster}"
 
     df = pd.read_csv(
         url,
         sep=",",
         encoding="utf-8-sig",
-        on_bad_lines="skip"  # skip any malformed lines
+        on_bad_lines="skip"
     )
 
-    # Clean header noise (e.g., BOM)
+    # Clean header noise
     df.columns = (
         df.columns
         .str.strip()
@@ -60,16 +56,19 @@ def load_data(cache_buster: int) -> pd.DataFrame:
     if missing:
         raise ValueError(f"Missing columns in CSV: {missing}")
 
-    # Parse dates (keep originals for display formatting below)
+    # Parse dates properly (keep as datetime for sorting)
     df["Date of match"] = pd.to_datetime(df["Date of match"], dayfirst=True, errors="coerce")
     df["Run date"] = pd.to_datetime(df["Run date"], errors="coerce")
 
-    # Convert probabilities to numeric
+    # Numeric probabilities
     df[NUMERIC_PROB_COLS] = df[NUMERIC_PROB_COLS].apply(pd.to_numeric, errors="coerce")
 
-    # Display-friendly date strings (DD-MM-YYYY)
-    df["Date of match"] = df["Date of match"].dt.strftime("%d-%m-%Y")
-    df["Run date"] = df["Run date"].dt.strftime("%d-%m-%Y")
+    # Add display columns for pretty formatting
+    df["Date of match (display)"] = df["Date of match"].dt.strftime("%d-%m-%Y")
+    df["Run date (display)"] = df["Run date"].dt.strftime("%d-%m-%Y")
+
+    # Sort by match date ascending (earliest first)
+    df = df.sort_values("Date of match", ascending=True)
 
     return df
 
@@ -81,10 +80,9 @@ with left:
         st.cache_data.clear()
         st.rerun()
 
-# cache_buster changes every minute → new cache entry + new raw URL query param
 cache_buster = int(time.time() // 60)
 
-# Load data safely
+# Load data
 try:
     df = load_data(cache_buster)
 except Exception as e:
@@ -107,18 +105,24 @@ filtered = df[df["Fixture"] == fixture_selection].copy()
 if filtered.empty:
     st.warning("No rows found for that fixture.")
 else:
-    # Show the data table (displaying formatted date columns)
+    # Columns to display
     display_cols = [
         "Fixture",
-        "Date of match",
+        "Date of match (display)",
         "Home Win Probability - Prediction", "Draw Probability - Prediction", "Away Win Probability - Prediction",
         "Home Win - Market Implied Probability", "Draw - Market Implied Probability", "Away Win - Market Implied Probability",
         "Home Win - Best Bookmaker Odds", "Draw - Best Bookmaker Odds", "Away Win- Best Bookmaker Odds",
-        "Run date",
+        "Run date (display)",
     ]
-    st.dataframe(df[display_cols], use_container_width=True, hide_index=True)
 
-    # Build chart data (use the first row of the selection)
+    # ✅ Show earliest games first
+    st.dataframe(
+        df[display_cols],
+        use_container_width=True,
+        hide_index=True
+    )
+
+    # Build chart from first row of filtered data
     row = filtered.iloc[0]
     plot_df = pd.DataFrame({
         "Outcome": ["Home Win", "Draw", "Away Win"] * 2,
@@ -145,5 +149,3 @@ else:
     fig.update_yaxes(range=[0, 1], tickformat=".0%")
     fig.update_layout(legend_title_text="", yaxis_title="Probability", xaxis_title="")
     st.plotly_chart(fig, use_container_width=True)
-
-
