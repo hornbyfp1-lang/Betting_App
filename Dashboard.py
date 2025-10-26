@@ -102,25 +102,6 @@ with st.sidebar:
 
 # ---- Main view: table + chart ----
 filtered = df[df["Fixture"] == fixture_selection].copy()
-if filtered.empty:
-    st.warning("No rows found for that fixture.")
-else:
-    # Columns to display
-    display_cols = [
-        "Fixture",
-        "Date of match (display)",
-        "Home Win Probability - Prediction", "Draw Probability - Prediction", "Away Win Probability - Prediction",
-        "Home Win - Market Implied Probability", "Draw - Market Implied Probability", "Away Win - Market Implied Probability",
-        "Home Win - Best Bookmaker Odds", "Draw - Best Bookmaker Odds", "Away Win- Best Bookmaker Odds",
-        "Run date (display)",
-    ]
-
-    # ✅ Show earliest games first
-    st.dataframe(
-        df[display_cols],
-        use_container_width=True,
-        hide_index=True
-    )
 
     # Build chart from first row of filtered data
     row = filtered.iloc[0]
@@ -149,3 +130,25 @@ else:
     fig.update_yaxes(range=[0, 1], tickformat=".0%")
     fig.update_layout(legend_title_text="", yaxis_title="Probability", xaxis_title="")
     st.plotly_chart(fig, use_container_width=True)
+
+if filtered.empty:
+    st.warning("No rows found for that fixture.")
+else:
+    # Columns to display
+    display_cols = [
+        "Fixture",
+        "Date of match (display)",
+        "Home Win Probability - Prediction", "Draw Probability - Prediction", "Away Win Probability - Prediction",
+        "Home Win - Market Implied Probability", "Draw - Market Implied Probability", "Away Win - Market Implied Probability",
+        "Home Win - Best Bookmaker Odds", "Draw - Best Bookmaker Odds", "Away Win- Best Bookmaker Odds",
+        "Run date (display)",
+    ]
+
+    # ✅ Show earliest games first
+    st.dataframe(
+        df[display_cols],
+        use_container_width=True,
+        hide_index=True
+    )
+
+
