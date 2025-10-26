@@ -116,7 +116,7 @@ else:
         "Home Win - Best Bookmaker Odds", "Draw - Best Bookmaker Odds", "Away Win- Best Bookmaker Odds",
         "Run date",
     ]
-    st.dataframe(filtered[display_cols], use_container_width=True, hide_index=True)
+    st.dataframe(df[display_cols], use_container_width=True, hide_index=True)
 
     # Build chart data (use the first row of the selection)
     row = filtered.iloc[0]
@@ -145,4 +145,5 @@ else:
     fig.update_yaxes(range=[0, 1], tickformat=".0%")
     fig.update_layout(legend_title_text="", yaxis_title="Probability", xaxis_title="")
     st.plotly_chart(fig, use_container_width=True)
+
 
